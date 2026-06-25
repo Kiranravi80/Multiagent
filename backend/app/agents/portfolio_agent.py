@@ -81,7 +81,7 @@ class PortfolioAgent(BaseAgent):
                     bio=config_data.get("bio", ""),
                     skills=config_data.get("skills", []),
                     projects=config_data.get("projects", []),
-                    socials={"linkedin": user.linkedin, "github": "", "email": user.email},
+                    socials={"linkedin": user.social_profiles.linkedin, "github": "", "email": user.email},
                     layout=config_data.get("layout", {})
                 )
                 portfolio_id = await self._portfolio_repo.create(new_portfolio)

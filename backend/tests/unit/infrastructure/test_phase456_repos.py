@@ -77,6 +77,9 @@ async def test_mongo_networking_repo() -> None:
         }
     mock_cursor.__aiter__ = mock_async_iterator
     mock_collection.find.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.sort.return_value = mock_cursor
     
     repo = MongoNetworkingRepository(mock_collection)
     result = await repo.get_all()
@@ -103,6 +106,7 @@ async def test_mongo_email_repo() -> None:
         }
     mock_cursor.__aiter__ = mock_async_iterator
     mock_collection.find.return_value = mock_cursor
+    mock_cursor.sort.return_value = mock_cursor
 
     repo = MongoEmailRepository(mock_collection)
     result = await repo.get_by_thread_id("thread_1")

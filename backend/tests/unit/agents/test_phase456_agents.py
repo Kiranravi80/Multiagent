@@ -65,6 +65,9 @@ async def test_portfolio_agent() -> None:
 
     mock_user = MagicMock(spec=UserModel)
     mock_user.id = "user_1"
+    mock_user.email = "user@example.com"
+    mock_user.social_profiles = MagicMock()
+    mock_user.social_profiles.linkedin = "https://linkedin.com/in/user"
     mock_user.skills = ["Python"]
     mock_user.experience = []
     mock_user.education = []
@@ -184,6 +187,9 @@ async def test_outreach_manager() -> None:
 
     mock_user = MagicMock(spec=UserModel)
     mock_user.email = "user@example.com"
+    mock_user.skills = ["Python"]
+    mock_user.bio = "Backend Dev"
+    mock_user.experience = []
     mock_user_repo.get_all.return_value = [mock_user]
 
     mock_llm = AsyncMock()
@@ -227,6 +233,8 @@ async def test_email_agent() -> None:
 
     mock_user = MagicMock(spec=UserModel)
     mock_user.email = "user@example.com"
+    mock_user.skills = ["Python"]
+    mock_user.experience = []
     mock_user_repo.get_all.return_value = [mock_user]
 
     mock_llm = AsyncMock()

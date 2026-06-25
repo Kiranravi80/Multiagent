@@ -132,6 +132,7 @@ def test_send_email_draft() -> None:
 def test_start_interview_session() -> None:
     mock_container = MagicMock()
     mock_orchestrator = MagicMock()
+    mock_orchestrator.execute_agent = AsyncMock()
     mock_interview_agent = MagicMock()
     mock_container.orchestrator = mock_orchestrator
     mock_orchestrator.registry.get.return_value = mock_interview_agent
@@ -143,7 +144,7 @@ def test_start_interview_session() -> None:
     )
 
     with patch("app.presentation.api.v1.interview_router.get_container", return_value=mock_container):
-        response = client.post("/api/v1/interview/sessions?role=SWE&company=Google")
+        response = client.post("/api/v1/interview/sessions?job_id=job_123")
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True

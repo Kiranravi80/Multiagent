@@ -83,7 +83,7 @@ async def get_interview_session(
 async def answer_interview_question(
     id: str,
     question_index: int,
-    user_answer: str,
+    user_answer: str = Body(...),
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> dict:
     """Submit a response for a specific question, score it, and retrieve feedback."""
