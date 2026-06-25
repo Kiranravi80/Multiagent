@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Award, Compass, GitHub, Star, Clock } from 'lucide-react';
+import { BookOpen, Award, Compass, Star, Clock } from 'lucide-react';
 
 export default function KnowledgeBase({ 
   token,
