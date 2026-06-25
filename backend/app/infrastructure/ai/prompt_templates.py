@@ -215,3 +215,45 @@ Resume:
 
 Job Description:
 {jd_text[:2000]}"""
+
+    @staticmethod
+    def job_matcher(profile_data: dict[str, Any], jd_data: dict[str, Any]) -> str:
+        """Prompt to score matching between user profile and job description analysis."""
+        return f"""Evaluate the compatibility between this user profile and this job description.
+        
+        Score categories from 0 to 100.
+        
+        Return ONLY valid JSON matching this schema:
+        {{
+            "overall": 0.0,
+            "skill": 0.0,
+            "experience": 0.0,
+            "education": 0.0,
+            "location": 0.0,
+            "salary": 0.0,
+            "culture": 0.0,
+            "notes": ""
+        }}
+        
+        User Profile:
+        {json.dumps(profile_data, indent=2, default=str)}
+        
+        Job Requirements:
+        {json.dumps(jd_data, indent=2, default=str)}"""
+
+    @staticmethod
+    def resume_tailor(resume_text: str, jd_text: str) -> str:
+        """Prompt to tailor a resume against a job description."""
+        return f"""Tailor the following resume to align with the provided job description.
+        
+        Emphasize technical skills, experience details, and achievements matching the job description requirements.
+        Do not falsify or fabricate any skills or experiences. Only re-phrase, organize, and emphasize relevant parts.
+        
+        Return ONLY the final tailored resume in clear, professional markdown or text format.
+        
+        Resume:
+        {resume_text}
+        
+        Job Description:
+        {jd_text}"""
+

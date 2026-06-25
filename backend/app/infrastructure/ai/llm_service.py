@@ -62,6 +62,16 @@ class LLMService:
         prompt = self._prompts.recruiter_evaluator(resume_text, jd_text)
         return await self._model.generate_json(prompt)
 
+    async def match_job(self, profile_data: dict[str, Any], jd_data: dict[str, Any]) -> dict[str, Any]:
+        """Score matching between user profile and job requirements."""
+        prompt = self._prompts.job_matcher(profile_data, jd_data)
+        return await self._model.generate_json(prompt)
+
+    async def tailor_resume(self, resume_text: str, jd_text: str) -> str:
+        """Tailor a resume to fit a job description."""
+        prompt = self._prompts.resume_tailor(resume_text, jd_text)
+        return await self._model.generate(prompt)
+
     async def generate_text(
         self,
         prompt: str,
