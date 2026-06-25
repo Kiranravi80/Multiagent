@@ -51,10 +51,21 @@ class MasterOrchestrator:
     # ── Agent Management ───────────────────────────────────────────────────
 
     async def register_agent(self, agent: BaseAgent) -> None:
-        """Register and initialize an agent."""
+        """Register, restore state, and initialize an agent."""
         self._registry.register(agent)
 
         try:
+            # Restore state from database
+            try:
+                from app.application.dependencies.container import get_container
+                state_repo = get_container().agent_state_repo
+                persisted_state = await state_repo.get_by_name(agent.name)
+                if persisted_state:
+                    await agent.restore_state(persisted_state.model_dump())
+                    logger.info("orchestrator_agent_state_restored", agent=agent.name)
+            except Exception as exc:
+                logger.warning("orchestrator_agent_state_restore_failed", agent=agent.name, error=str(exc))
+
             await agent.initialize()
             await self._event_bus.publish(
                 agent_registered_event(agent_name=agent.name)
@@ -74,7 +85,7 @@ class MasterOrchestrator:
         context: dict[str, Any] | None = None,
     ) -> AgentResult:
         """
-        Execute a specific agent.
+        Execute a specific agent with retries and persist state.
 
         Uses the BaseAgent.run() wrapper which handles metrics and errors.
         """
@@ -99,7 +110,52 @@ class MasterOrchestrator:
             agent_started_event(agent_name=agent_name)
         )
 
-        result = await agent.run(context)
+        # Retry Engine configuration parameters from agent properties or defaults
+        max_retries = getattr(agent, "max_retries", 2)
+        strategy = getattr(agent, "retry_strategy", "exponential_backoff_with_jitter")
+
+        from app.core.retry import RetryEngine
+
+        async def _run_attempt() -> AgentResult:
+            res = await agent.run(context)
+            if not res.success:
+                raise RuntimeError(res.message or "Agent run failed")
+            return res
+
+        try:
+            if max_retries > 0:
+                result = await RetryEngine.retry_async(
+                    _run_attempt,
+                    max_retries=max_retries,
+                    strategy=strategy,
+                    operation_name=f"agent_run_{agent_name}",
+                )
+            else:
+                result = await agent.run(context)
+        except Exception as exc:
+            # All retry attempts failed, returning the final status
+            result = AgentResult(
+                success=False,
+                data={},
+                message=f"Agent '{agent_name}' execution failed after retries: {exc}",
+                errors=[str(exc)],
+            )
+
+        # Persist state after run
+        try:
+            from app.application.dependencies.container import get_container
+            state_repo = get_container().agent_state_repo
+            state_data = await agent.save_state()
+            db_state = await state_repo.get_by_name(agent.name)
+            if db_state:
+                await state_repo.update(db_state.id, state_data)
+            else:
+                from app.domain.models.agent_state import AgentStateModel
+                model = AgentStateModel.model_validate(state_data)
+                await state_repo.create(model)
+            logger.info("orchestrator_agent_state_saved", agent=agent_name)
+        except Exception as exc:
+            logger.error("orchestrator_save_state_failed", agent=agent_name, error=str(exc))
 
         # Record in history
         self._execution_history.append({

@@ -20,6 +20,8 @@ from app.application.services.job_service import JobService
 from app.application.services.profile_service import ProfileService
 from app.application.services.resume_service import ResumeService
 from app.application.services.user_service import UserService
+from app.application.services.metrics_service import MetricsService
+from app.application.services.audit_service import AuditService
 from app.core.logging import get_logger
 from app.core.config import get_settings
 from app.infrastructure.ai.llm_service import LLMService
@@ -30,6 +32,7 @@ from app.infrastructure.database.repositories.mongo_job_repo import MongoJobRepo
 from app.infrastructure.database.repositories.mongo_resume_repo import MongoResumeRepository
 from app.infrastructure.database.repositories.mongo_user_repo import MongoUserRepository
 from app.infrastructure.database.repositories.mongo_audit_repo import MongoAuditRepository
+from app.infrastructure.database.repositories.mongo_agent_state_repo import MongoAgentStateRepository
 from app.infrastructure.event_bus.base import EventBus
 from app.infrastructure.event_bus.in_memory_bus import InMemoryEventBus
 from app.infrastructure.event_bus.redis_bus import RedisEventBus
@@ -74,6 +77,7 @@ class Container:
             timeout_ms=self._settings.playwright_timeout_ms,
         )
         self._notification_manager = NotificationManager(self._settings)
+        self._metrics_service = MetricsService()
         self._orchestrator: MasterOrchestrator | None = None
 
         # Repository instances (initialized after DB connect)
@@ -81,6 +85,8 @@ class Container:
         self._job_repo: MongoJobRepository | None = None
         self._resume_repo: MongoResumeRepository | None = None
         self._audit_repo: MongoAuditRepository | None = None
+        self._agent_state_repo: MongoAgentStateRepository | None = None
+        self._audit_service: AuditService | None = None
 
     async def initialize(self) -> None:
         """Initialize all infrastructure components."""
@@ -97,6 +103,23 @@ class Container:
         self._job_repo = MongoJobRepository(db.jobs)
         self._resume_repo = MongoResumeRepository(db.resumes)
         self._audit_repo = MongoAuditRepository(db.audit_logs)
+        self._agent_state_repo = MongoAgentStateRepository(db.agent_states)
+        
+        self._audit_service = AuditService(self._audit_repo)
+
+        # Subscribe AuditService to critical events
+        from app.core.constants import EventType
+        critical_events = [
+            EventType.SYSTEM_STARTED,
+            EventType.SYSTEM_SHUTDOWN,
+            EventType.AGENT_ERROR,
+            EventType.USER_REGISTERED,
+            EventType.RESUME_UPLOADED,
+            EventType.RESUME_GENERATED,
+            EventType.APPLICATION_SUBMITTED,
+        ]
+        for event_type in critical_events:
+            await self._event_bus.subscribe(event_type, self._audit_service.log_event)
 
         # AI
         await self._model_manager.initialize()
@@ -186,6 +209,12 @@ class Container:
             raise RuntimeError("Container not initialized")
         return self._audit_repo
 
+    @property
+    def agent_state_repo(self) -> MongoAgentStateRepository:
+        if self._agent_state_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._agent_state_repo
+
     # ── Service Factories ──────────────────────────────────────────────────
 
     @property
@@ -219,6 +248,16 @@ class Container:
     @property
     def agent_orchestration_service(self) -> AgentOrchestrationService:
         return AgentOrchestrationService(self.orchestrator)
+
+    @property
+    def metrics_service(self) -> MetricsService:
+        return self._metrics_service
+
+    @property
+    def audit_service(self) -> AuditService:
+        if self._audit_service is None:
+            raise RuntimeError("Container not initialized")
+        return self._audit_service
 
 
 

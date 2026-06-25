@@ -15,6 +15,7 @@ from app.presentation.api.v1.profile_router import router as profile_router
 from app.presentation.api.v1.resume_router import router as resume_router
 from app.presentation.api.v1.system_router import router as system_router
 from app.presentation.api.v1.user_router import router as user_router
+from app.presentation.api.v1.dashboard_router import router as dashboard_router
 
 v1_router = APIRouter(prefix="/api/v1")
 
@@ -25,3 +26,4 @@ v1_router.include_router(resume_router)
 v1_router.include_router(job_router)
 v1_router.include_router(agent_router)
 v1_router.include_router(system_router)
+v1_router.include_router(dashboard_router)
