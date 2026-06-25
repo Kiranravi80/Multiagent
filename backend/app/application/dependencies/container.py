@@ -33,6 +33,10 @@ from app.infrastructure.database.repositories.mongo_resume_repo import MongoResu
 from app.infrastructure.database.repositories.mongo_user_repo import MongoUserRepository
 from app.infrastructure.database.repositories.mongo_audit_repo import MongoAuditRepository
 from app.infrastructure.database.repositories.mongo_agent_state_repo import MongoAgentStateRepository
+from app.infrastructure.database.repositories.mongo_application_repo import MongoApplicationRepository
+from app.infrastructure.database.repositories.mongo_digest_repo import MongoDigestRepository
+from app.infrastructure.database.repositories.mongo_learning_plan_repo import MongoLearningPlanRepository
+from app.infrastructure.database.repositories.mongo_knowledge_repo import MongoKnowledgeRepository
 from app.infrastructure.event_bus.base import EventBus
 from app.infrastructure.event_bus.in_memory_bus import InMemoryEventBus
 from app.infrastructure.event_bus.redis_bus import RedisEventBus
@@ -86,6 +90,10 @@ class Container:
         self._resume_repo: MongoResumeRepository | None = None
         self._audit_repo: MongoAuditRepository | None = None
         self._agent_state_repo: MongoAgentStateRepository | None = None
+        self._application_repo: MongoApplicationRepository | None = None
+        self._digest_repo: MongoDigestRepository | None = None
+        self._learning_plan_repo: MongoLearningPlanRepository | None = None
+        self._knowledge_repo: MongoKnowledgeRepository | None = None
         self._audit_service: AuditService | None = None
 
     async def initialize(self) -> None:
@@ -104,6 +112,10 @@ class Container:
         self._resume_repo = MongoResumeRepository(db.resumes)
         self._audit_repo = MongoAuditRepository(db.audit_logs)
         self._agent_state_repo = MongoAgentStateRepository(db.agent_states)
+        self._application_repo = MongoApplicationRepository(db.applications)
+        self._digest_repo = MongoDigestRepository(db.digests)
+        self._learning_plan_repo = MongoLearningPlanRepository(db.learning_plans)
+        self._knowledge_repo = MongoKnowledgeRepository(db.knowledge)
         
         self._audit_service = AuditService(self._audit_repo)
 
@@ -137,6 +149,75 @@ class Container:
             job_repo=self._job_repo,
         )
         await self._orchestrator.register_agent(job_collector)
+
+        from app.agents.job_classifier_agent import JobClassifierAgent
+        from app.agents.jb_analyzer_agent import JDAnalyzerAgent
+        from app.agents.job_matcher_agent import JobMatcherAgent
+        from app.agents.resume_tailor_agent import ResumeTailorAgent
+        from app.agents.job_alert_agent import JobAlertAgent
+        from app.agents.apply_agent import ApplyAgent
+        from app.agents.news_agent import NewsAgent
+        from app.agents.research_agent import ResearchAgent
+        from app.agents.learning_agent import LearningAgent
+        from app.agents.digest_agent import DigestAgent
+
+        await self._orchestrator.register_agent(
+            JobClassifierAgent(event_bus=self._event_bus, job_repo=self._job_repo)
+        )
+        await self._orchestrator.register_agent(
+            JDAnalyzerAgent(event_bus=self._event_bus, job_repo=self._job_repo)
+        )
+        await self._orchestrator.register_agent(
+            JobMatcherAgent(
+                event_bus=self._event_bus,
+                job_repo=self._job_repo,
+                user_repo=self._user_repo,
+                application_repo=self._application_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            ResumeTailorAgent(
+                event_bus=self._event_bus,
+                job_repo=self._job_repo,
+                user_repo=self._user_repo,
+                resume_repo=self._resume_repo,
+                application_repo=self._application_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            JobAlertAgent(
+                event_bus=self._event_bus,
+                job_repo=self._job_repo,
+                user_repo=self._user_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            ApplyAgent(
+                event_bus=self._event_bus,
+                job_repo=self._job_repo,
+                application_repo=self._application_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            NewsAgent(event_bus=self._event_bus, knowledge_repo=self._knowledge_repo)
+        )
+        await self._orchestrator.register_agent(
+            ResearchAgent(event_bus=self._event_bus, knowledge_repo=self._knowledge_repo)
+        )
+        await self._orchestrator.register_agent(
+            LearningAgent(
+                event_bus=self._event_bus,
+                user_repo=self._user_repo,
+                learning_plan_repo=self._learning_plan_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            DigestAgent(
+                event_bus=self._event_bus,
+                knowledge_repo=self._knowledge_repo,
+                digest_repo=self._digest_repo,
+            )
+        )
 
         logger.info("container_initialized")
 
@@ -214,6 +295,30 @@ class Container:
         if self._agent_state_repo is None:
             raise RuntimeError("Container not initialized")
         return self._agent_state_repo
+
+    @property
+    def application_repo(self) -> MongoApplicationRepository:
+        if self._application_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._application_repo
+
+    @property
+    def digest_repo(self) -> MongoDigestRepository:
+        if self._digest_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._digest_repo
+
+    @property
+    def learning_plan_repo(self) -> MongoLearningPlanRepository:
+        if self._learning_plan_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._learning_plan_repo
+
+    @property
+    def knowledge_repo(self) -> MongoKnowledgeRepository:
+        if self._knowledge_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._knowledge_repo
 
     # ── Service Factories ──────────────────────────────────────────────────
 

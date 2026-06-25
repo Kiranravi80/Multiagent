@@ -72,6 +72,11 @@ class LLMService:
         prompt = self._prompts.resume_tailor(resume_text, jd_text)
         return await self._model.generate(prompt)
 
+    async def generate_learning_plan(self, skills_user: list[str], target_skills: list[str]) -> dict[str, Any]:
+        """Generate a structured learning plan based on skill gaps."""
+        prompt = self._prompts.learning_plan_generator(skills_user, target_skills)
+        return await self._model.generate_json(prompt)
+
     async def generate_text(
         self,
         prompt: str,

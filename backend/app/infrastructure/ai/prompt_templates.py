@@ -257,3 +257,26 @@ Job Description:
         Job Description:
         {jd_text}"""
 
+    @staticmethod
+    def learning_plan_generator(skills_user: list[str], target_skills: list[str]) -> str:
+        """Prompt to generate a structured learning plan for missing skills."""
+        return f"""Act as an expert technical mentor. Generate a structured, step-by-step learning plan to help a software engineer bridge the gap between their current skills and target skills.
+        
+        Current Skills: {', '.join(skills_user)}
+        Target/Missing Skills to acquire: {', '.join(target_skills)}
+        
+        Provide actionable study blocks, estimated hours, and descriptions for each topic.
+        
+        Return ONLY valid JSON matching this schema:
+        {{
+            "title": "Learning Plan Name",
+            "tasks": [
+                {{
+                    "topic": "Topic Name",
+                    "description": "What to study and practice",
+                    "estimated_hours": 4.5
+                }}
+            ]
+        }}"""
+
+

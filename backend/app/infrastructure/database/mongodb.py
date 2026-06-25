@@ -151,4 +151,15 @@ class MongoDBManager:
         # Agent states collection
         await db.agent_states.create_index("agent_name", unique=True)
 
+        # Digests collection
+        await db.digests.create_index("type")
+        await db.digests.create_index("created_at")
+
+        # Learning plans collection
+        await db.learning_plans.create_index("user_id")
+
+        # Knowledge collection
+        await db.knowledge.create_index("type")
+        await db.knowledge.create_index("created_at")
+
         logger.info("mongodb_indexes_created")
