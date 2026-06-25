@@ -59,7 +59,7 @@ async def test_mongo_learning_plan_repo() -> None:
     
     mock_cursor = MagicMock()
     
-    async def mock_async_iterator():
+    async def mock_async_iterator(*args, **kwargs):
         yield {
             "_id": ObjectId(),
             "user_id": "user_1",
@@ -91,7 +91,7 @@ async def test_mongo_knowledge_repo() -> None:
     
     mock_cursor = MagicMock()
     
-    async def mock_async_iterator():
+    async def mock_async_iterator(*args, **kwargs):
         yield {
             "_id": ObjectId(),
             "title": "Knowledge Title",
