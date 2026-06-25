@@ -1,0 +1,1 @@
+"""Concrete MongoDB repository implementations."""
