@@ -20,16 +20,21 @@ from app.application.services.profile_service import ProfileService
 from app.application.services.resume_service import ResumeService
 from app.application.services.user_service import UserService
 from app.core.logging import get_logger
+from app.core.config import get_settings
 from app.infrastructure.ai.llm_service import LLMService
 from app.infrastructure.ai.model_manager import ModelManager
+from app.infrastructure.browser.browser_manager import BrowserManager
 from app.infrastructure.database.mongodb import MongoDBManager
 from app.infrastructure.database.repositories.mongo_job_repo import MongoJobRepository
 from app.infrastructure.database.repositories.mongo_resume_repo import MongoResumeRepository
 from app.infrastructure.database.repositories.mongo_user_repo import MongoUserRepository
+from app.infrastructure.database.repositories.mongo_audit_repo import MongoAuditRepository
 from app.infrastructure.event_bus.base import EventBus
 from app.infrastructure.event_bus.in_memory_bus import InMemoryEventBus
+from app.infrastructure.event_bus.redis_bus import RedisEventBus
 from app.infrastructure.memory.memory_manager import MemoryManager
-from app.infrastructure.memory.vector_store import InMemoryVectorStore
+from app.infrastructure.memory.vector_store import ChromaVectorStore, InMemoryVectorStore
+from app.infrastructure.notifications.notification_manager import NotificationManager
 from app.infrastructure.storage.file_storage import FileStorage
 
 logger = get_logger(__name__)
@@ -50,22 +55,38 @@ class Container:
     """
 
     def __init__(self) -> None:
+        self._settings = get_settings()
         # Infrastructure singletons
         self._db_manager = MongoDBManager()
-        self._event_bus: EventBus = InMemoryEventBus()
+        
+        if self._settings.use_redis_event_bus:
+            self._event_bus: EventBus = RedisEventBus(self._settings.redis_url)
+        else:
+            self._event_bus = InMemoryEventBus()
+
         self._model_manager = ModelManager()
         self._file_storage = FileStorage()
-        self._vector_store = InMemoryVectorStore()
+        self._vector_store = ChromaVectorStore(self._settings)
         self._memory_manager = MemoryManager(self._vector_store)
+        self._browser_manager = BrowserManager(
+            headless=self._settings.playwright_headless,
+            timeout_ms=self._settings.playwright_timeout_ms,
+        )
+        self._notification_manager = NotificationManager(self._settings)
         self._orchestrator: MasterOrchestrator | None = None
 
         # Repository instances (initialized after DB connect)
         self._user_repo: MongoUserRepository | None = None
         self._job_repo: MongoJobRepository | None = None
         self._resume_repo: MongoResumeRepository | None = None
+        self._audit_repo: MongoAuditRepository | None = None
 
     async def initialize(self) -> None:
         """Initialize all infrastructure components."""
+        # Event Bus start
+        if isinstance(self._event_bus, RedisEventBus):
+            await self._event_bus.start()
+
         # Database
         await self._db_manager.connect()
         await self._db_manager.create_indexes()
@@ -74,9 +95,13 @@ class Container:
         self._user_repo = MongoUserRepository(db.users)
         self._job_repo = MongoJobRepository(db.jobs)
         self._resume_repo = MongoResumeRepository(db.resumes)
+        self._audit_repo = MongoAuditRepository(db.audit_logs)
 
         # AI
         await self._model_manager.initialize()
+
+        # Browser
+        await self._browser_manager.start()
 
         # Orchestrator
         self._orchestrator = MasterOrchestrator(event_bus=self._event_bus)
@@ -88,6 +113,9 @@ class Container:
         """Gracefully shut down all infrastructure."""
         if self._orchestrator:
             await self._orchestrator.shutdown()
+        await self._browser_manager.stop()
+        if isinstance(self._event_bus, RedisEventBus):
+            await self._event_bus.stop()
         await self._model_manager.shutdown()
         await self._db_manager.disconnect()
         logger.info("container_shutdown")
@@ -116,6 +144,14 @@ class Container:
     def memory_manager(self) -> MemoryManager:
         return self._memory_manager
 
+    @property
+    def browser_manager(self) -> BrowserManager:
+        return self._browser_manager
+
+    @property
+    def notification_manager(self) -> NotificationManager:
+        return self._notification_manager
+
     # ── Repository Properties ──────────────────────────────────────────────
 
     @property
@@ -135,6 +171,12 @@ class Container:
         if self._resume_repo is None:
             raise RuntimeError("Container not initialized")
         return self._resume_repo
+
+    @property
+    def audit_repo(self) -> MongoAuditRepository:
+        if self._audit_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._audit_repo
 
     # ── Service Factories ──────────────────────────────────────────────────
 

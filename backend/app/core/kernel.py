@@ -55,6 +55,10 @@ async def boot() -> None:
         )
     )
 
+    # 4. Start scheduler
+    from app.schedulers.scheduler import start_scheduler
+    start_scheduler()
+
     logger.info(
         "kernel_booted",
         agents_registered=container.orchestrator.registry.count,
@@ -70,6 +74,13 @@ async def shutdown() -> None:
     Reverses the boot order.
     """
     logger.info("kernel_shutting_down")
+
+    # Stop scheduler
+    from app.schedulers.scheduler import stop_scheduler
+    try:
+        stop_scheduler()
+    except Exception:
+        pass
 
     try:
         container = get_container()

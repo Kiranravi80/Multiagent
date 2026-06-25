@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: paios_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: paios_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: paios_chromadb
+    ports:
+      - "8000:8000"
+    environment:
+      - ANONYMIZED_TELEMETRY=False
+    volumes:
+      - chromadb_data:/chroma/data
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  chromadb_data:
