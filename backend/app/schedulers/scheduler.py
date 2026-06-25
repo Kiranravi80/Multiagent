@@ -29,11 +29,11 @@ def start_scheduler() -> None:
         logger.info("scheduler_disabled_by_config")
         return
 
-    # Trigger job collection sequence via career_agent
+    # Trigger job collection sequence via job_collector_agent
     scheduler.add_job(
         trigger_agent_execution,
         "interval",
-        args=["career_agent"],
+        args=["job_collector_agent"],
         minutes=settings.job_collection_interval_minutes,
         id="job_collection_run",
         replace_existing=True,

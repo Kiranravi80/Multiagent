@@ -35,7 +35,15 @@ async def test_in_memory_event_bus() -> None:
 async def test_redis_event_bus_mocked() -> None:
     with patch("redis.asyncio.from_url") as mock_from_url:
         mock_redis = MagicMock()
+        mock_redis.publish = AsyncMock()
+        mock_redis.close = AsyncMock()
         mock_pubsub = AsyncMock()
+
+        async def mock_get_message(*args, **kwargs):
+            await asyncio.sleep(0.1)
+            return None
+        mock_pubsub.get_message.side_effect = mock_get_message
+
         mock_redis.pubsub.return_value = mock_pubsub
         mock_from_url.return_value = mock_redis
 

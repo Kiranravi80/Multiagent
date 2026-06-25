@@ -1,4 +1,5 @@
 from app.infrastructure.queue.celery_app import celery_app
+from app.infrastructure.queue import tasks as _tasks
 
 
 def test_celery_tasks_registered() -> None:

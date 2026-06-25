@@ -60,3 +60,8 @@ class EventBus(ABC):
     async def get_subscriber_count(self, event_type: str) -> int:
         """Return the number of handlers subscribed to an event type."""
         ...
+
+    @abstractmethod
+    async def health_check(self) -> bool:
+        """Return True if the event bus is healthy and operational."""
+        ...

@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.infrastructure.browser.browser_manager import BrowserManager
 
@@ -10,11 +10,13 @@ async def test_browser_manager_lifecycle() -> None:
     with patch("app.infrastructure.browser.browser_manager.async_playwright") as mock_ap:
         mock_playwright_instance = AsyncMock()
         mock_browser = AsyncMock()
-        mock_context = AsyncMock()
+        mock_context = MagicMock()
+        mock_context.close = AsyncMock()
+        mock_context.new_page = AsyncMock()
 
-        mock_ap.return_value.start.return_value = mock_playwright_instance
-        mock_playwright_instance.chromium.launch.return_value = mock_browser
-        mock_browser.new_context.return_value = mock_context
+        mock_ap.return_value.start = AsyncMock(return_value=mock_playwright_instance)
+        mock_playwright_instance.chromium.launch = AsyncMock(return_value=mock_browser)
+        mock_browser.new_context = AsyncMock(return_value=mock_context)
 
         manager = BrowserManager(headless=True)
         await manager.start()

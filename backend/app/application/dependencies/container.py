@@ -13,6 +13,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 from app.agents.orchestrator.master_orchestrator import MasterOrchestrator
+from app.agents.job_collector_agent import JobCollectorAgent
 from app.application.services.agent_orchestration_service import AgentOrchestrationService
 from app.application.services.auth_service import AuthService
 from app.application.services.job_service import JobService
@@ -106,6 +107,13 @@ class Container:
         # Orchestrator
         self._orchestrator = MasterOrchestrator(event_bus=self._event_bus)
         await self._orchestrator.start()
+
+        # Register agents
+        job_collector = JobCollectorAgent(
+            event_bus=self._event_bus,
+            job_repo=self._job_repo,
+        )
+        await self._orchestrator.register_agent(job_collector)
 
         logger.info("container_initialized")
 

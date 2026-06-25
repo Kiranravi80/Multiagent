@@ -149,3 +149,12 @@ class RedisEventBus(EventBus):
                 event_type=event.event_type,
                 error=str(exc),
             )
+
+    async def health_check(self) -> bool:
+        """Ping Redis to check connection health."""
+        if not self._redis:
+            return False
+        try:
+            return await self._redis.ping()
+        except Exception:
+            return False

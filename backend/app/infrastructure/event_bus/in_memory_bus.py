@@ -108,3 +108,7 @@ class InMemoryEventBus(EventBus):
             for event_type, handlers in self._subscribers.items()
             if handlers
         }
+
+    async def health_check(self) -> bool:
+        """InMemory event bus is always healthy."""
+        return True
