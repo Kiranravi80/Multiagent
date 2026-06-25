@@ -9,6 +9,12 @@ All infrastructure is initialized through the Kernel, not here.
 
 from __future__ import annotations
 
+import sys
+import asyncio
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
