@@ -19,7 +19,7 @@ async def get_all_agent_status(
 ) -> dict:
     """Get health status of all registered agents."""
     container = get_container()
-    return await container.orchestrator.get_system_status()
+    return await container.agent_orchestration_service.get_system_status()
 
 
 @router.post("/execute")
@@ -29,7 +29,7 @@ async def execute_agent(
 ) -> dict:
     """Trigger execution of a specific agent."""
     container = get_container()
-    result = await container.orchestrator.execute_agent(
+    result = await container.agent_orchestration_service.execute_agent(
         body.agent_name, context=body.context
     )
     return {
@@ -73,4 +73,4 @@ async def daily_summary(
 ) -> dict:
     """Get daily execution summary."""
     container = get_container()
-    return await container.orchestrator.get_daily_summary()
+    return await container.agent_orchestration_service.get_daily_summary()

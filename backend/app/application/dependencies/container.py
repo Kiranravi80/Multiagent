@@ -13,6 +13,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 from app.agents.orchestrator.master_orchestrator import MasterOrchestrator
+from app.application.services.agent_orchestration_service import AgentOrchestrationService
 from app.application.services.auth_service import AuthService
 from app.application.services.job_service import JobService
 from app.application.services.profile_service import ProfileService
@@ -164,6 +165,11 @@ class Container:
     @property
     def llm_service(self) -> LLMService:
         return LLMService(self._model_manager)
+
+    @property
+    def agent_orchestration_service(self) -> AgentOrchestrationService:
+        return AgentOrchestrationService(self.orchestrator)
+
 
 
 # ── Singleton Container ────────────────────────────────────────────────────
