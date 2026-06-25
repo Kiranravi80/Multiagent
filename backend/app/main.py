@@ -19,6 +19,8 @@ from app.core.config import get_settings
 from app.core.kernel import boot, shutdown
 from app.presentation.api.middleware.error_handler import register_error_handlers
 from app.presentation.api.middleware.request_logging import RequestLoggingMiddleware
+from app.presentation.api.middleware.rate_limit import RateLimitMiddleware
+from app.presentation.api.middleware.security_headers import SecurityHeadersMiddleware
 from app.presentation.api.v1.router import v1_router
 from app.presentation.websocket.agent_monitor import router as ws_router
 
@@ -69,6 +71,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RateLimitMiddleware, rate_limit=100, period=60)
     app.add_middleware(RequestLoggingMiddleware)
 
     # ── Error Handlers ─────────────────────────────────────────────────
