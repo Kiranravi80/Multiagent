@@ -20,6 +20,7 @@ from app.core.kernel import boot, shutdown
 from app.presentation.api.middleware.error_handler import register_error_handlers
 from app.presentation.api.middleware.request_logging import RequestLoggingMiddleware
 from app.presentation.api.v1.router import v1_router
+from app.presentation.websocket.agent_monitor import router as ws_router
 
 
 @asynccontextmanager
@@ -75,6 +76,7 @@ def create_app() -> FastAPI:
 
     # ── Routers ────────────────────────────────────────────────────────
     app.include_router(v1_router)
+    app.include_router(ws_router)
 
     # ── Root ───────────────────────────────────────────────────────────
     @app.get("/", tags=["Root"])

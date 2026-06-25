@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Response
 
 from app.application.dependencies.auth import get_current_user
 from app.application.dependencies.container import get_container
@@ -76,7 +76,7 @@ async def update_user_by_id(
 async def delete_user_by_id(
     user_id: str,
     current_user: dict[str, Any] = Depends(get_current_user),
-) -> None:
+) -> Response:
     """Delete a user by ID."""
     if current_user["role"] != "admin" and current_user["id"] != user_id:
         from app.core.exceptions import AuthorizationError
@@ -84,3 +84,4 @@ async def delete_user_by_id(
 
     container = get_container()
     await container.user_service.delete_user(user_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

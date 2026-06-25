@@ -17,6 +17,7 @@ from app.core.config import get_settings
 from app.core.logging import get_logger, setup_logging
 from app.application.dependencies.container import get_container, initialize_container, shutdown_container
 from app.domain.events.system_events import system_started_event, system_shutdown_event
+from app.presentation.websocket.agent_monitor import register_ws_listener
 
 logger = get_logger(__name__)
 
@@ -42,6 +43,9 @@ async def boot() -> None:
 
     # 2. Initialize DI container (DB, AI, Event Bus, Orchestrator)
     container = await initialize_container()
+
+    # Register WebSocket event listener
+    await register_ws_listener()
 
     # 3. Publish system started event
     await container.event_bus.publish(
