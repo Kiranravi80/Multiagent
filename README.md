@@ -9,21 +9,13 @@ PAIOS is a self-hosted, privacy-first AI Operating System designed to work as yo
 ### Prerequisites
 - **Python 3.12+**
 - **Node.js 18+ & npm**
-- **Docker & Docker Compose** (for production mode or quick database setup)
+- **MongoDB, Redis, and ChromaDB** running locally on your system
 
 ---
 
-## 🛠️ Local Development Setup
+## 🛠️ Local Setup & Execution
 
-To run PAIOS locally in development mode:
-
-### 1. Database & Cache Services
-Spin up the required database infrastructure (MongoDB, Redis, ChromaDB) via Docker:
-```bash
-docker compose up -d
-```
-
-### 2. Backend API Setup
+### 1. Backend API Setup
 Navigate to the `backend/` directory, set up your virtual environment, and install dependencies using `uv`:
 ```bash
 cd backend
@@ -54,25 +46,14 @@ uvicorn app.main:app --reload --port 8000
 - API Docs: `http://localhost:8000/docs`
 - Health Endpoint: `http://localhost:8000/api/v1/system/health`
 
-### 3. Frontend UI Setup
+### 2. Frontend UI Setup
 Navigate to the `frontend/` directory, install packages, and start the development server:
 ```bash
 cd ../frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:5173` in your browser. The Vite environment will automatically reverse-proxy API requests to port `8000`.
-
----
-
-## 🐳 Production Deployment (Docker Compose)
-
-To run the complete, containerized production environment (Databases + FastAPI Backend + React Frontend served via Nginx proxying):
-
-```bash
-docker compose -f docker-compose.prod.yml up --build -d
-```
-Once built, open `http://localhost` (port 80) to access the premium glassmorphic control center.
+Open `http://localhost:5173` in your browser. The Vite environment will automatically reverse-proxy API requests to the FastAPI server running on port `8000`.
 
 ---
 
