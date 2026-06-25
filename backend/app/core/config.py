@@ -128,6 +128,50 @@ class Settings(BaseSettings):
         description="Interval between job collection runs",
     )
 
+    # ── Celery (Background Tasks) ──────────────────────────────────────────
+    celery_broker_url: str = Field(
+        default="redis://localhost:6379/1",
+        description="Celery broker connection URL",
+    )
+    celery_result_backend: str = Field(
+        default="redis://localhost:6379/1",
+        description="Celery result backend URL",
+    )
+
+    # ── ChromaDB (Vector Store) ────────────────────────────────────────────
+    chroma_persist_dir: str = Field(
+        default="chroma_db",
+        description="Directory to store ChromaDB local files",
+    )
+    chroma_host: str = Field(
+        default="",
+        description="Remote ChromaDB host. If empty, runs in-process.",
+    )
+    chroma_port: int = Field(
+        default=8000,
+        description="Remote ChromaDB port.",
+    )
+
+    # ── Playwright (Browser Scraper) ───────────────────────────────────────
+    playwright_headless: bool = Field(
+        default=True,
+        description="Run Playwright browser in headless mode",
+    )
+    playwright_timeout_ms: int = Field(
+        default=30000,
+        description="Global timeout for browser navigation in milliseconds",
+    )
+
+    # ── Notifications ──────────────────────────────────────────────────────
+    telegram_bot_token: str = Field(default="", description="Telegram Bot token")
+    telegram_chat_id: str = Field(default="", description="Telegram Chat ID for alerts")
+    discord_webhook_url: str = Field(default="", description="Discord Webhook URL for logs/alerts")
+    smtp_host: str = Field(default="", description="SMTP email host")
+    smtp_port: int = Field(default=587, description="SMTP email port")
+    smtp_username: str = Field(default="", description="SMTP username")
+    smtp_password: str = Field(default="", description="SMTP password")
+    smtp_from_email: str = Field(default="", description="SMTP sender address")
+
     # ── CORS ───────────────────────────────────────────────────────────────
     cors_origins: list[str] = Field(
         default=["http://localhost:3000", "http://localhost:3001"],

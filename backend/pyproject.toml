@@ -43,6 +43,16 @@ dependencies = [
 
     # ── Scheduling ─────────────────────────────────────────
     "apscheduler>=3.10.0",
+
+    # ── Redis & Task Queue ─────────────────────────────────
+    "redis>=5.0.0",
+    "celery>=5.4.0",
+
+    # ── Browser Automation ─────────────────────────────────
+    "playwright>=1.49.0",
+
+    # ── Vector Store ───────────────────────────────────────
+    "chromadb>=0.5.0",
 ]
 
 [project.optional-dependencies]
