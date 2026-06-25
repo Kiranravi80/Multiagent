@@ -162,4 +162,28 @@ class MongoDBManager:
         await db.knowledge.create_index("type")
         await db.knowledge.create_index("created_at")
 
+        # Contents collection
+        await db.contents.create_index("platform")
+        await db.contents.create_index("status")
+        await db.contents.create_index("created_at")
+
+        # Portfolios collection
+        await db.portfolios.create_index("user_id", unique=True)
+
+        # Networking collection
+        await db.networking.create_index("status")
+        await db.networking.create_index("created_at")
+
+        # Emails collection
+        await db.emails.create_index("thread_id")
+        await db.emails.create_index("status")
+        await db.emails.create_index("created_at")
+
+        # Calendar events collection
+        await db.calendar_events.create_index("start_time")
+
+        # Interviews collection
+        await db.interviews.create_index("job_id")
+        await db.interviews.create_index("created_at")
+
         logger.info("mongodb_indexes_created")

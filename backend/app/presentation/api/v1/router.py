@@ -18,6 +18,9 @@ from app.presentation.api.v1.user_router import router as user_router
 from app.presentation.api.v1.dashboard_router import router as dashboard_router
 from app.presentation.api.v1.application_router import router as application_router
 from app.presentation.api.v1.knowledge_router import router as knowledge_router
+from app.presentation.api.v1.presence_router import router as presence_router
+from app.presentation.api.v1.communication_router import router as communication_router
+from app.presentation.api.v1.interview_router import router as interview_router
 
 v1_router = APIRouter(prefix="/api/v1")
 
@@ -31,3 +34,6 @@ v1_router.include_router(system_router)
 v1_router.include_router(dashboard_router)
 v1_router.include_router(application_router)
 v1_router.include_router(knowledge_router)
+v1_router.include_router(presence_router)
+v1_router.include_router(communication_router)
+v1_router.include_router(interview_router)

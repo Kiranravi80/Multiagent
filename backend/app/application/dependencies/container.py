@@ -37,6 +37,12 @@ from app.infrastructure.database.repositories.mongo_application_repo import Mong
 from app.infrastructure.database.repositories.mongo_digest_repo import MongoDigestRepository
 from app.infrastructure.database.repositories.mongo_learning_plan_repo import MongoLearningPlanRepository
 from app.infrastructure.database.repositories.mongo_knowledge_repo import MongoKnowledgeRepository
+from app.infrastructure.database.repositories.mongo_content_repo import MongoContentRepository
+from app.infrastructure.database.repositories.mongo_portfolio_repo import MongoPortfolioRepository
+from app.infrastructure.database.repositories.mongo_networking_repo import MongoNetworkingRepository
+from app.infrastructure.database.repositories.mongo_email_repo import MongoEmailRepository
+from app.infrastructure.database.repositories.mongo_calendar_repo import MongoCalendarRepository
+from app.infrastructure.database.repositories.mongo_interview_repo import MongoInterviewRepository
 from app.infrastructure.event_bus.base import EventBus
 from app.infrastructure.event_bus.in_memory_bus import InMemoryEventBus
 from app.infrastructure.event_bus.redis_bus import RedisEventBus
@@ -94,6 +100,12 @@ class Container:
         self._digest_repo: MongoDigestRepository | None = None
         self._learning_plan_repo: MongoLearningPlanRepository | None = None
         self._knowledge_repo: MongoKnowledgeRepository | None = None
+        self._content_repo: MongoContentRepository | None = None
+        self._portfolio_repo: MongoPortfolioRepository | None = None
+        self._networking_repo: MongoNetworkingRepository | None = None
+        self._email_repo: MongoEmailRepository | None = None
+        self._calendar_repo: MongoCalendarRepository | None = None
+        self._interview_repo: MongoInterviewRepository | None = None
         self._audit_service: AuditService | None = None
 
     async def initialize(self) -> None:
@@ -116,6 +128,12 @@ class Container:
         self._digest_repo = MongoDigestRepository(db.digests)
         self._learning_plan_repo = MongoLearningPlanRepository(db.learning_plans)
         self._knowledge_repo = MongoKnowledgeRepository(db.knowledge)
+        self._content_repo = MongoContentRepository(db.contents)
+        self._portfolio_repo = MongoPortfolioRepository(db.portfolios)
+        self._networking_repo = MongoNetworkingRepository(db.networking)
+        self._email_repo = MongoEmailRepository(db.emails)
+        self._calendar_repo = MongoCalendarRepository(db.calendar_events)
+        self._interview_repo = MongoInterviewRepository(db.interviews)
         
         self._audit_service = AuditService(self._audit_repo)
 
@@ -216,6 +234,74 @@ class Container:
                 event_bus=self._event_bus,
                 knowledge_repo=self._knowledge_repo,
                 digest_repo=self._digest_repo,
+            )
+        )
+        
+        from app.agents.linkedin_content_agent import LinkedInContentAgent
+        from app.agents.portfolio_agent import PortfolioAgent
+        from app.agents.github_agent import GitHubAgent
+        from app.agents.networking_agent import NetworkingAgent
+        from app.agents.outreach_manager import OutreachManager
+        from app.agents.email_agent import EmailAgent
+        from app.agents.calendar_agent import CalendarAgent
+        from app.agents.interview_agent import InterviewAgent
+
+        await self._orchestrator.register_agent(
+            LinkedInContentAgent(
+                event_bus=self._event_bus,
+                content_repo=self._content_repo,
+                user_repo=self._user_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            PortfolioAgent(
+                event_bus=self._event_bus,
+                portfolio_repo=self._portfolio_repo,
+                user_repo=self._user_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            GitHubAgent(
+                event_bus=self._event_bus,
+                content_repo=self._content_repo,
+                user_repo=self._user_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            NetworkingAgent(
+                event_bus=self._event_bus,
+                networking_repo=self._networking_repo,
+                job_repo=self._job_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            OutreachManager(
+                event_bus=self._event_bus,
+                networking_repo=self._networking_repo,
+                user_repo=self._user_repo,
+                email_repo=self._email_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            EmailAgent(
+                event_bus=self._event_bus,
+                email_repo=self._email_repo,
+                user_repo=self._user_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            CalendarAgent(
+                event_bus=self._event_bus,
+                calendar_repo=self._calendar_repo,
+                email_repo=self._email_repo,
+            )
+        )
+        await self._orchestrator.register_agent(
+            InterviewAgent(
+                event_bus=self._event_bus,
+                interview_repo=self._interview_repo,
+                job_repo=self._job_repo,
+                resume_repo=self._resume_repo,
             )
         )
 
@@ -319,6 +405,42 @@ class Container:
         if self._knowledge_repo is None:
             raise RuntimeError("Container not initialized")
         return self._knowledge_repo
+
+    @property
+    def content_repo(self) -> MongoContentRepository:
+        if self._content_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._content_repo
+
+    @property
+    def portfolio_repo(self) -> MongoPortfolioRepository:
+        if self._portfolio_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._portfolio_repo
+
+    @property
+    def networking_repo(self) -> MongoNetworkingRepository:
+        if self._networking_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._networking_repo
+
+    @property
+    def email_repo(self) -> MongoEmailRepository:
+        if self._email_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._email_repo
+
+    @property
+    def calendar_repo(self) -> MongoCalendarRepository:
+        if self._calendar_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._calendar_repo
+
+    @property
+    def interview_repo(self) -> MongoInterviewRepository:
+        if self._interview_repo is None:
+            raise RuntimeError("Container not initialized")
+        return self._interview_repo
 
     # ── Service Factories ──────────────────────────────────────────────────
 

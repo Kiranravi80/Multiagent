@@ -77,6 +77,36 @@ class LLMService:
         prompt = self._prompts.learning_plan_generator(skills_user, target_skills)
         return await self._model.generate_json(prompt)
 
+    async def generate_content(self, platform: str, topic: str, user_bio: str) -> dict[str, Any]:
+        """Generate technical content drafts."""
+        prompt = self._prompts.content_generator(platform, topic, user_bio)
+        return await self._model.generate_json(prompt)
+
+    async def generate_portfolio_config(self, profile_data: dict[str, Any], projects: list[dict[str, Any]]) -> dict[str, Any]:
+        """Generate/update personal portfolio configurations."""
+        prompt = self._prompts.portfolio_updater(profile_data, projects)
+        return await self._model.generate_json(prompt)
+
+    async def draft_outreach(self, profile_data: dict[str, Any], target_contact: dict[str, Any]) -> dict[str, Any]:
+        """Draft personalized recruiter/hiring lead outreach notes."""
+        prompt = self._prompts.outreach_drafter(profile_data, target_contact)
+        return await self._model.generate_json(prompt)
+
+    async def draft_email_reply(self, inbound_email: str, user_profile: dict[str, Any]) -> dict[str, Any]:
+        """Draft a reply to recruiter emails."""
+        prompt = self._prompts.email_responder(inbound_email, user_profile)
+        return await self._model.generate_json(prompt)
+
+    async def generate_interview_questions(self, role: str, company: str, resume_text: str, jd_text: str | None = None) -> dict[str, Any]:
+        """Generate mock interview technical and behavioral questions."""
+        prompt = self._prompts.interview_generator(role, company, resume_text, jd_text)
+        return await self._model.generate_json(prompt)
+
+    async def evaluate_interview_answer(self, question: str, ideal_answer: str, user_answer: str) -> dict[str, Any]:
+        """Evaluate a mock interview response and score it."""
+        prompt = self._prompts.interview_evaluator(question, ideal_answer, user_answer)
+        return await self._model.generate_json(prompt)
+
     async def generate_text(
         self,
         prompt: str,

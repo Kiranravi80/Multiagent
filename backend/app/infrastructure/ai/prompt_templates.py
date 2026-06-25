@@ -279,4 +279,146 @@ Job Description:
             ]
         }}"""
 
+    @staticmethod
+    def content_generator(platform: str, topic: str, user_bio: str) -> str:
+        """Prompt to generate professional posts/content drafts."""
+        return f"""Act as a seasoned tech industry leader and influencer.
+        Draft a high-impact, professional content post for {platform} on the topic: "{topic}".
+        Use a natural, technical, and engaging tone. Avoid generic buzzwords.
+        
+        User Professional Context:
+        {user_bio}
+        
+        Return a JSON object with "title" and "body" keys.
+        Return ONLY valid JSON:
+        {{
+            "title": "A compelling title or hook",
+            "body": "The complete post content, formatted with line breaks if appropriate"
+        }}"""
+
+    @staticmethod
+    def portfolio_updater(profile_data: dict[str, Any], projects: list[dict[str, Any]]) -> str:
+        """Prompt to generate or update portfolio layout and featured details."""
+        return f"""Generate a structured portfolio page layout configuration based on the user's profile and projects.
+        
+        Profile Data:
+        {json.dumps(profile_data, indent=2, default=str)}
+        
+        Projects:
+        {json.dumps(projects, indent=2, default=str)}
+        
+        Return ONLY valid JSON matching this schema:
+        {{
+            "bio": "A catchy, brief professional bio for a personal website",
+            "skills": ["skill1", "skill2"],
+            "projects": [
+                {{
+                    "title": "Project Name",
+                    "description": "Brief 1-2 sentence description",
+                    "technologies": ["tech1"],
+                    "github_url": "",
+                    "live_url": ""
+                }}
+            ],
+            "socials": {{
+                "linkedin": "",
+                "github": "",
+                "email": ""
+            }},
+            "layout": {{
+                "theme": "dark-glassmorphism",
+                "columns": 2,
+                "sections_order": ["header", "bio", "skills", "projects", "contact"]
+            }}
+        }}"""
+
+    @staticmethod
+    def outreach_drafter(profile_data: dict[str, Any], target_contact: dict[str, Any]) -> str:
+        """Prompt to draft targeted recruiter/lead outreach messages."""
+        return f"""Draft a professional, short, and highly personalized outreach message to a contact.
+        Make it sound authentic, respectful, and short (under 300 characters for LinkedIn, or a short email).
+        
+        User Profile:
+        {json.dumps(profile_data, indent=2, default=str)}
+        
+        Target Contact:
+        {json.dumps(target_contact, indent=2, default=str)}
+        
+        Return ONLY valid JSON matching this schema:
+        {{
+            "subject": "Outreach Subject Line (if email, otherwise empty)",
+            "message": "The personalized connection note or message"
+        }}"""
+
+    @staticmethod
+    def email_responder(inbound_email: str, user_profile: dict[str, Any]) -> str:
+        """Prompt to draft email response options."""
+        return f"""Act as the user's AI chief-of-staff. Read this inbound recruiter/hiring email and draft a professional reply.
+        Ensure it aligns with the user's profile, highlights interest, and seeks to schedule a conversation.
+        
+        Inbound Email:
+        {inbound_email}
+        
+        User Profile:
+        {json.dumps(user_profile, indent=2, default=str)}
+        
+        Return ONLY valid JSON matching this schema:
+        {{
+            "subject": "Re: original subject or appropriate reply subject",
+            "body": "The drafted email response"
+        }}"""
+
+    @staticmethod
+    def interview_generator(role: str, company: str, resume_text: str, jd_text: str | None = None) -> str:
+        """Prompt to generate mock interview questions."""
+        return f"""Generate 5 targeted, highly technical mock interview questions for a candidate.
+        Target Role: {role}
+        Target Company: {company}
+        
+        Candidate Resume:
+        {resume_text[:2000]}
+        
+        Job Description:
+        {(jd_text or "")[:2000]}
+        
+        Provide a mixture of resume-specific, coding, system design, and behavioral questions.
+        For each question, provide a detailed "ideal_answer" summary.
+        
+        Return ONLY valid JSON matching this schema:
+        {{
+            "questions": [
+                {{
+                    "question": "Question text here",
+                    "type": "technical|behavioral|resume",
+                    "ideal_answer": "Key points that should be in the candidate's answer"
+                }}
+            ]
+        }}"""
+
+    @staticmethod
+    def interview_evaluator(question: str, ideal_answer: str, user_answer: str) -> str:
+        """Prompt to evaluate mock interview answer."""
+        return f"""Act as a principal software interviewer. Evaluate the candidate's answer to this mock interview question.
+        Compare it against the ideal answer expectations.
+        
+        Question:
+        {question}
+        
+        Ideal Answer Expectation:
+        {ideal_answer}
+        
+        Candidate's Answer:
+        {user_answer}
+        
+        Grade the answer from 0.0 to 100.0. Provide specific missing points and constructive feedback.
+        
+        Return ONLY valid JSON matching this schema:
+        {{
+            "score": 85.0,
+            "feedback": "A general summary of their performance",
+            "strengths": ["what they did well"],
+            "improvements": ["what was missing or wrong"]
+        }}"""
+
+
 
